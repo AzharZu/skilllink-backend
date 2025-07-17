@@ -5,7 +5,6 @@ class User(BaseModel):
     name: str = Field(..., min_length=2, max_length=50)
     email: EmailStr
     age: Optional[int] = Field(None, ge=0, le=120)
-    phone: Optional[str] = Field(None, pattern=r"^\\+?[1-9]\\d{1,14}$")
     skills: List[str] = Field(default_factory=list)
     username: str = Field(..., min_length=3, max_length=30)
     password: str = Field(..., min_length=6)
