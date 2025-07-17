@@ -81,7 +81,7 @@ def register_user(user: User):
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.users.find_one({"email": form_data.username})
-    if not user or not verify_password(form_data.password, user['password']):
+    if not user or not verify_password(user['password'],form_data.password):
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
