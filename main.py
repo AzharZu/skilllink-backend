@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, status
 from database import db
 from models import User, Swipe, Match, Message, ForumPost, TrainingPlan
@@ -7,12 +8,48 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta, datetime
 from jose import JWTError, jwt
 from typing import Dict
+from fastapi import WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://skilllink-frontend.vercel.app"
+    ],  # Можно ["*"] на время разработки, но не для продакшена!
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+active_connections = {}
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await websocket.accept()
+    active_connections[user_id] = websocket
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # можно парсить JSON или просто текст
+            print(f"Message from {user_id}: {data}")
+    except WebSocketDisconnect:
+        print(f"User {user_id} disconnected")
+        del active_connections[user_id]
+async def send_personal_message(user_id: str, message: str):
+    websocket = active_connections.get(user_id)
+    if websocket:
+        await websocket.send_text(message)
+
 
 SECRET_KEY = "your_secret_key_here"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
